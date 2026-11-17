@@ -8,14 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     services:
       db:
-        image: timescale/timescaledb:2.17.2-pg16
+        image: postgres:16.6-alpine
         env: { POSTGRES_USER: agriroute, POSTGRES_PASSWORD: agriroute, POSTGRES_DB: agriroute_test }
         ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U agriroute" --health-interval 5s --health-timeout 3s --health-retries 20
     strategy:
       matrix:
-        db: [sqlite, timescale]
+        db: [sqlite, postgres]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,7 +27,7 @@ jobs:
       - name: Tests (${{ matrix.db }})
         working-directory: backend
         env:
-          TEST_DATABASE_URL: ${{ matrix.db == 'timescale' && 'postgresql+psycopg://agriroute:agriroute@localhost:5432/agriroute_test' || '' }}
+          TEST_DATABASE_URL: ${{ matrix.db == 'postgres' && 'postgresql+psycopg://agriroute:agriroute@localhost:5432/agriroute_test' || '' }}
           TEST_ENABLE_PROPHET: ${{ matrix.db == 'sqlite' && 'true' || 'false' }}
         run: |
           [ -z "$TEST_DATABASE_URL" ] && unset TEST_DATABASE_URL

@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { outbox } from "@/lib/api";
+import { outbox, wakeApi } from "@/lib/api";
 import { I18nProvider } from "@/lib/i18n";
 
 const NetCtx = createContext({ online: true, pending: 0 });
@@ -11,6 +11,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState(0);
 
   useEffect(() => {
+    wakeApi();
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }

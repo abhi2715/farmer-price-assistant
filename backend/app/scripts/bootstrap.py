@@ -37,6 +37,8 @@ def main(force_train: bool = False) -> None:
             res = forecasting.train(db)
             log.info("trained %s in %ss, best=%s mean MAPE=%s", res["version"], res["train_seconds"], res["best_model"],
                      {k: round(v, 2) for k, v in res["metrics"]["mape_overall"].items()})
+        elif forecasting.register_active_model(db):
+            log.info("registered pre-trained model %s", forecasting.active_model().version)
         last = db.scalar(select(func.max(PriceHistory.date)))
         have = db.scalar(select(func.count()).select_from(Forecast).where(Forecast.origin_date >= last - timedelta(days=0)))
         if force_train or not have:

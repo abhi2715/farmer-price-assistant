@@ -1,0 +1,27 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# New -> Blueprint -> pick this repo. You'll be asked for DATABASE_URL (Supabase "Session pooler" URI).
+services:
+  - type: web
+    name: agriroute-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: infra/docker/render.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false   # paste the Supabase Session pooler connection string
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENV
+        value: demo
+      - key: OTP_DEV_MODE
+        value: "true"   # public demo: OTP is 123456
+      - key: BOOTSTRAP_ON_STARTUP
+        value: "true"
+      - key: CORS_ORIGINS
+        value: http://localhost:3000
+      - key: CORS_ORIGIN_REGEX
+        value: https://farmer-price-assistant.*\.vercel\.app

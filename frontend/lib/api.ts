@@ -2,7 +2,16 @@
 // Thin fetch client: JWT auth, timeouts for flaky 2G/3G, last-good-response cache for offline,
 // and an outbox that queues writes (e.g. posting a lot) while offline and replays them later.
 
-export const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "") + "/api/v1";
+export const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL || "";
+export const API_BASE = API_ORIGIN + "/api/v1";
+// Free hosts (Render) sleep when idle and take ~30-60 s to wake, so hosted builds raise this.
+const DEFAULT_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS) || 20000;
+
+/** Fire-and-forget request that wakes a sleeping API while the user is still reading the page. */
+export function wakeApi(): void {
+  if (!API_ORIGIN) return;
+  fetch(API_ORIGIN + "/health", { cache: "no-store", mode: "cors" }).catch(() => {});
+}
 
 export type User = {
   id: number; phone: string; name: string; role: "farmer" | "buyer" | "admin"; language: "en" | "hi" | "kn";
@@ -56,7 +65,7 @@ export class OfflineError extends Error {}
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown; timeoutMs?: number } = {}): Promise<T> {
   const method = opts.method || "GET";
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? 20000);
+  const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   const headers: Record<string, string> = { Accept: "application/json" };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   const tok = session.token();

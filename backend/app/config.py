@@ -2,6 +2,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -11,7 +12,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(ROOT / ".env", ".env"), extra="ignore", protected_namespaces=("settings_",))
 
     env: str = "dev"
-    # Postgres+TimescaleDB in Docker; SQLite works for local dev/tests.
+    # Postgres in Docker / Supabase in production; SQLite works for local dev/tests.
     database_url: str = f"sqlite:///{ROOT / 'agriroute.db'}"
     # Empty => in-memory fallbacks (cache, OTP store, rate limiter) and eager Celery.
     redis_url: str = ""
@@ -24,6 +25,12 @@ class Settings(BaseSettings):
     rate_limit_default: str = "300/minute"
     rate_limit_otp: str = "5/minute"
     cors_origins: str = "http://localhost:3000,http://localhost:8080"
+    cors_origin_regex: str = ""  # e.g. https://farmer-price-assistant.*\.vercel\.app (preview + prod URLs)
+
+    # Single-process hosting (Render free tier): run the bootstrap in a background thread at startup and
+    # repeat it periodically, standing in for the Celery worker + beat.
+    bootstrap_on_startup: bool = False
+    bootstrap_interval_hours: float = 6
 
     # Data sources
     datagov_api_key: str = ""  # data.gov.in key for Agmarknet
@@ -46,6 +53,15 @@ class Settings(BaseSettings):
     # Notifications (mocked unless a webhook is configured)
     sms_webhook_url: str = ""
     whatsapp_webhook_url: str = ""
+
+    @field_validator("database_url")
+    @classmethod
+    def _psycopg_driver(cls, v: str) -> str:
+        # Accept the plain URLs Supabase/Render hand out (postgres://, postgresql://).
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg://" + v[len(prefix):]
+        return v
 
     @property
     def is_sqlite(self) -> bool:

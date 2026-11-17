@@ -1,9 +1,11 @@
 """DB <-> ML bridge: load training frames, train, store forecasts, serve them, explain them."""
 from __future__ import annotations
 
+import json
 import logging
 import threading
 from datetime import date, timedelta
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -80,6 +82,21 @@ def train(db: Session, enable_prophet: bool | None = None) -> dict:
     db.commit()
     active_model(reload=True)
     return res
+
+
+def register_active_model(db: Session) -> bool:
+    """Record a model trained elsewhere (e.g. baked into the Docker image at build time) in model_runs."""
+    m = active_model()
+    if m is None or db.scalar(select(ModelRun.id).where(ModelRun.version == m.version)):
+        return False
+    s = get_settings()
+    report = Path(s.report_dir) / "backtest_report.json"
+    metrics = json.loads(report.read_text()) if report.exists() else {}
+    db.execute(ModelRun.__table__.update().values(is_active=False))
+    db.add(ModelRun(version=m.version, best_model=m.best_model, metrics=metrics,
+                    report_path=str(report.with_suffix(".md")), is_active=True))
+    db.commit()
+    return True
 
 
 def generate_forecasts(db: Session, max_h: int = 30) -> int:
