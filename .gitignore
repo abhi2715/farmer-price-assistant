@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+node_modules/
+.next/
+frontend/out/
+agriroute.db*
+ml/artifacts/
+mlruns/
+notifications_outbox.jsonl
+.env

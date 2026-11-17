@@ -1,0 +1,11 @@
+**/node_modules
+**/.next
+frontend/out
+**/.venv
+**/__pycache__
+**/*.pyc
+agriroute.db*
+ml/artifacts
+**/mlruns
+.git
+notifications_outbox.jsonl

@@ -1,0 +1,9 @@
+line-length = 130
+target-version = "py311"
+extend-exclude = ["backend/alembic/versions"]
+[lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "B008", "UP007", "B905", "E731", "UP038"]
+
+[lint.isort]
+known-first-party = ["app", "agriroute_ml", "tests"]

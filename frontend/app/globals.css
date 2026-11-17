@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+body { @apply bg-soil-50 text-soil-900 antialiased; font-feature-settings: "ss01"; }
+input, select { @apply rounded-2xl border border-soil-400/40 bg-white px-4 py-3 text-base outline-none focus:border-leaf-500 focus:ring-2 focus:ring-leaf-500/20; min-height: 48px; }
+label { @apply text-sm font-medium text-soil-700; }
+
+/* Scroll-triggered entrance (see components/Reveal.tsx) */
+.reveal { opacity: 0; transform: translateY(36px); transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
+.reveal.is-in { opacity: 1; transform: none; }
+
+.text-gradient { background: linear-gradient(120deg, #15803d 0%, #22c55e 45%, #ca8a04 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal, .animate-rise, .animate-fade { opacity: 1 !important; transform: none !important; transition: none !important; animation: none !important; }
+}
